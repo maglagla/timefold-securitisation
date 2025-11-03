@@ -27,13 +27,14 @@ public class ComputePortfoliosService {
         var solution = solverManager.solve(1L, problem);
 
         printPortfolioSummary(solution.getFinalBestSolution());
+        logger.info("Solution score: {}", solution.getFinalBestSolution().getScore());
     }
 
     private SecuritisationPlan loadProblem() {
         List<Portfolio> portfolios = TestDataGenerator.generatePortfolios();
         return new SecuritisationPlan(
                 portfolios,
-                TestDataGenerator.generateLoans(1000, portfolios)
+                TestDataGenerator.generateLoans(1000)
         );
     }
 
@@ -67,13 +68,6 @@ public class ComputePortfoliosService {
     private long countLoansForPortfolio(SecuritisationPlan plan, Portfolio portfolio) {
         return plan.getLoans().stream()
                 .filter(loan -> portfolio.getName().equals(loan.getAssignedPortfolioName()))
-                .count();
-    }
-
-    private long countInvestmentGradeLoansForPortfolio(SecuritisationPlan plan, Portfolio portfolio) {
-        return plan.getLoans().stream()
-                .filter(loan -> portfolio.getName().equals(loan.getAssignedPortfolioName()))
-                .filter(loan -> Ratings.isInvestmentGrade(loan.getRating()))
                 .count();
     }
 

@@ -78,8 +78,8 @@ public class Loan {
         return assignedPortfolio != null ? assignedPortfolio.getName() : "Unassigned";
     }
 
-    public int countInvestmentGrade() {
-        return Ratings.isInvestmentGrade(this.rating) ? 1 : 0;
+    public int countAGrade() {
+        return Ratings.isAGrade(rating) ? 1 : 0;
     }
 
 }

@@ -1,6 +1,6 @@
 package de.markusglagla.timefold.sec;
 
-import ai.timefold.solver.core.api.score.buildin.hardsoft.HardSoftScore;
+import ai.timefold.solver.core.api.score.buildin.hardmediumsoft.HardMediumSoftScore;
 import ai.timefold.solver.core.api.score.stream.*;
 
 import java.util.Arrays;
@@ -21,7 +21,7 @@ public class PortfolioConstraintProvider implements ConstraintProvider {
         return factory.forEach(Loan.class)
                 .groupBy(Loan::getAssignedPortfolio, ConstraintCollectors.sumBigDecimal(Loan::getAmount))
                 .filter((portfolio, total) -> total.compareTo(portfolio.getMaxVolume()) > 0)
-                .penalize(HardSoftScore.ONE_HARD)
+                .penalize(HardMediumSoftScore.ONE_HARD)
                 .asConstraint("Portfolio volume exceeded");
     }
 
@@ -30,7 +30,7 @@ public class PortfolioConstraintProvider implements ConstraintProvider {
                 .filter(loan -> loan.getAssignedPortfolio() != null)
                 .groupBy(Loan::getAssignedPortfolio, ConstraintCollectors.sumBigDecimal(Loan::getAmount))
                 .filter((portfolio, total) -> total.compareTo(portfolio.getMaxVolume()) <= 0)
-                .reward(HardSoftScore.ONE_SOFT, (portfolio, total) -> total.intValue())
+                .reward(HardMediumSoftScore.ONE_SOFT, (portfolio, total) -> total.intValue())
                 .asConstraint("Maximize amount within portfolio bound");
     }
 
@@ -40,7 +40,7 @@ public class PortfolioConstraintProvider implements ConstraintProvider {
                     int idx = Arrays.asList(Ratings.RATINGS).indexOf(loan.getRating());
                     return idx > 5;
                 })
-                .penalize(HardSoftScore.ONE_HARD, loan -> 1)
+                .penalize(HardMediumSoftScore.ONE_HARD, loan -> 1)
                 .asConstraint("Only allowed ratings");
     }
 
@@ -48,9 +48,12 @@ public class PortfolioConstraintProvider implements ConstraintProvider {
         return factory.forEach(Loan.class)
                 .groupBy(Loan::getAssignedPortfolio,
                         ConstraintCollectors.count(),
-                        ConstraintCollectors.sum(loan -> loan.countInvestmentGrade()))
+                        ConstraintCollectors.sum(Loan::countAGrade))
                 .filter((portfolio, totalCount, investmentGradeCount) -> investmentGradeCount * 2 < totalCount)
-                .penalize(HardSoftScore.ONE_HARD, (portfolio, totalCount, investmentGradeCount) -> 1)
+                .penalize(HardMediumSoftScore.ONE_MEDIUM, (portfolio, totalCount, investmentGradeCount) -> {
+                    int fehlend = Math.ceilDiv(totalCount, 2) - investmentGradeCount;
+                    return Math.max(fehlend, 0);
+                })
                 .asConstraint("Mindestens 50% A, AA oder AAA");
     }
 

@@ -1,0 +1,28 @@
+@startuml
+skinparam classAttributeIconSize 0
+
+class Loan <<PlanningEntity>> {
+  +id: String
+  +amount: decimal
+  +rating: String
+  +durationInMonths: int
+  +interestRate: decimal
+  +assignedPortfolio: Portfolio <<PlanningVariable>>
+}
+
+class Portfolio {
+  +name: String
+  +maxVolume: decimal
+}
+
+class SecuritizationPlan <<PlanningSolution>> {
+  +portfolios: List<Portfolio> <<ValueRangeProvider>>
+  +loans: List<Loan> <<PlanningEntityCollectionProperty>>
+  +score: HardMediumSoftScore <<PlanningScore>>
+}
+
+Loan "*" -- "0..1" Portfolio : assigned to >
+SecuritizationPlan -- "*" Portfolio
+SecuritizationPlan -- "*" Loan
+
+@enduml
